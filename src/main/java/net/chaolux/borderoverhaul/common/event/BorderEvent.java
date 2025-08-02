@@ -17,13 +17,14 @@ import net.minecraft.world.phys.Vec3;
 import net.minecraftforge.event.TickEvent;
 import net.minecraftforge.event.level.LevelEvent;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
-import net.minecraftforge.fml.common.Mod;
+import net.minecraftforge.fml.common.Mod.EventBusSubscriber;
+import net.minecraftforge.fml.common.Mod.EventBusSubscriber.Bus;
 
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-@Mod.EventBusSubscriber
+@EventBusSubscriber(modid = "borderoverhaul", bus = Bus.FORGE)
 public class BorderEvent {
     private static final Map<ResourceKey<Level>, Integer> BORDER_CACHE=new HashMap<>();
 
@@ -37,18 +38,30 @@ public class BorderEvent {
         if (event.phase != TickEvent.Phase.END || !(event.level instanceof ServerLevel serverLevel)) return;
         ResourceKey<Level> dimension = serverLevel.dimension();
         int borderSize=BORDER_CACHE.getOrDefault(dimension,30000000);
-
         double halfBorder = borderSize / 2.0;
+
 
         for (Entity entity : serverLevel.getEntities().getAll()) {
             double x = entity.getX();
             double z = entity.getZ();
+            boolean shapeBorder=switch(Config.BORDER_SHAPE.get()) {
+                case SQUARE -> Math.abs(x) > halfBorder || Math.abs(z) > halfBorder;
+                case CIRCLE -> (x * x + z * z) > (halfBorder * halfBorder);
+                case OVAL -> {
+                    double rx=halfBorder;
+                    double rz=rx * Config.OVAL_Z_RATIO.get();
+                    yield (x * x) / (rx * rx) + (z * z) / (rz * rz) > 1.0;
+                }
+            };
 
-            if (Math.abs(x) > halfBorder || Math.abs(z) > halfBorder) {
+            if (!shapeBorder) continue;
                 double knockbackForce = Config.KNOCKBACK_FORCE.get();
-                double knockbackX = (x > halfBorder) ? -knockbackForce : (x < -halfBorder) ? knockbackForce : 0;
-                double knockbackZ = (z > halfBorder) ? -knockbackForce : (z < -halfBorder) ? knockbackForce : 0;
-
+                double dx=x;
+                double dz=z;
+                double math=Math.sqrt(dx * dx + dz * dz);
+                if(math == 0) math=0.01;
+                double knockbackX = -knockbackForce * (dx / math);
+                double knockbackZ = -knockbackForce * (dz / math);
 
                 if (entity instanceof ServerPlayer player) {
                     player.setDeltaMovement(new Vec3(knockbackX, 0.2, knockbackZ));
@@ -67,7 +80,6 @@ public class BorderEvent {
                 } else if (entity instanceof net.minecraft.world.entity.Mob && Config.ENABLE_MOB_KNOCKBACK.get()) {
                     entity.setDeltaMovement(new Vec3(knockbackX, 0, knockbackZ));
                 }
-            }
         }
     }
 

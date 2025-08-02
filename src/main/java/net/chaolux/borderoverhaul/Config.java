@@ -11,12 +11,17 @@ import java.util.List;
 @Mod.EventBusSubscriber(modid = BorderOverhaul.MOD_ID, bus = Mod.EventBusSubscriber.Bus.MOD)
 public class Config {
     public static final ForgeConfigSpec.Builder BUILDER = new ForgeConfigSpec.Builder();
+    public enum BorderShape {
+        SQUARE,CIRCLE,OVAL
+    }
 
     // Border
     public static final ForgeConfigSpec.IntValue OVERWORLD_BORDER;
     public static final ForgeConfigSpec.IntValue NETHER_BORDER;
     public static final ForgeConfigSpec.IntValue END_BORDER;
     public static final ForgeConfigSpec.ConfigValue<List<? extends String>> CUSTOM_BORDER_LIST;
+    public static final ForgeConfigSpec.EnumValue<BorderShape> BORDER_SHAPE;
+    public static final ForgeConfigSpec.DoubleValue OVAL_Z_RATIO;
 
     // Knockback force
     public static final ForgeConfigSpec.DoubleValue KNOCKBACK_FORCE;
@@ -90,6 +95,14 @@ public class Config {
         ENABLE_MOB_KNOCKBACK = BUILDER
                 .comment("Enable knockback for mobs (default: false)")
                 .define("enable_mob_knockback", false);
+
+        BUILDER.pop();
+
+        BUILDER.push("Experimental Shape Border");
+
+        BORDER_SHAPE=BUILDER.comment("Shape of a border: SQUARE, CIRCLE, OVAL").defineEnum("shape",BorderShape.SQUARE);
+
+        OVAL_Z_RATIO=BUILDER.comment("Z-axis stretch ratio for oval shape(only applies if shape=OVAL)").defineInRange("oval_z_ratio",0.6,0.1,10.0);
 
         BUILDER.pop();
 
