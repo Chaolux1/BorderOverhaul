@@ -1,9 +1,12 @@
 package net.chaolux.borderoverhaul;
 
+import net.chaolux.borderoverhaul.common.event.BorderEvent;
 import net.minecraftforge.common.ForgeConfigSpec;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.common.Mod;
 import net.minecraftforge.fml.event.config.ModConfigEvent;
+
+import java.util.List;
 
 @Mod.EventBusSubscriber(modid = BorderOverhaul.MOD_ID, bus = Mod.EventBusSubscriber.Bus.MOD)
 public class Config {
@@ -13,6 +16,7 @@ public class Config {
     public static final ForgeConfigSpec.IntValue OVERWORLD_BORDER;
     public static final ForgeConfigSpec.IntValue NETHER_BORDER;
     public static final ForgeConfigSpec.IntValue END_BORDER;
+    public static final ForgeConfigSpec.ConfigValue<List<? extends String>> CUSTOM_BORDER_LIST;
 
     // Knockback force
     public static final ForgeConfigSpec.DoubleValue KNOCKBACK_FORCE;
@@ -46,6 +50,7 @@ public class Config {
                 .comment("Border size for the End (default: 100000)")
                 .defineInRange("end", 100000, 100, 30000000);
 
+        CUSTOM_BORDER_LIST=BUILDER.comment("Custom dimension border in format 'modid:name_dimension=value'").defineListAllowEmpty(List.of("custom_border_list"),List.of(),object -> object instanceof String && ((String) object).contains("="));
 
         BUILDER.pop();
 
@@ -113,6 +118,6 @@ public class Config {
 
     @SubscribeEvent
     public static void onLoad(final ModConfigEvent event) {
-
+        BorderEvent.reloadConfig();
     }
 }
