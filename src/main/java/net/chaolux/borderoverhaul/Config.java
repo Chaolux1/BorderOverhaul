@@ -33,6 +33,11 @@ public class Config {
     public static final ForgeConfigSpec.BooleanValue ENABLE_VILLAGER_KNOCKBACK;
     public static final ForgeConfigSpec.BooleanValue ENABLE_ANIMAL_KNOCKBACK;
     public static final ForgeConfigSpec.BooleanValue ENABLE_MOB_KNOCKBACK;
+    public static final ForgeConfigSpec.BooleanValue ENABLE_MOD_ENTITY_KNOCKBACK;
+    public static final ForgeConfigSpec.ConfigValue<List<? extends String>> MOD_ENTITY_KNOCKBACK_LIST;
+    public static final ForgeConfigSpec.BooleanValue ENABLE_MOD_ENTITY_CLAMP;
+    public static final ForgeConfigSpec.ConfigValue<List<? extends String>> MOD_ENTITY_CLAMP_LIST;
+    public static final ForgeConfigSpec.DoubleValue MOD_ENTITY_CLAMP_OFFSET;
 
     // Effect radius
     public static ForgeConfigSpec.IntValue EFFECT_1_THRESHOLD;
@@ -96,6 +101,26 @@ public class Config {
                 .comment("Enable knockback for mobs (default: false)")
                 .define("enable_mob_knockback", false);
 
+        ENABLE_MOD_ENTITY_KNOCKBACK = BUILDER
+                .comment("Enable knockback for custom mod entities from the list below (default: false)")
+                .define("enable_mod_entity_knockback", false);
+
+        MOD_ENTITY_KNOCKBACK_LIST=BUILDER
+                .comment("List of entity ids that should be pushed back by the border","Example: modid:entity_id")
+                        .defineListAllowEmpty(List.of("mod_entity_knockback_list"),List.of(),object -> object instanceof String);
+
+        ENABLE_MOD_ENTITY_CLAMP=BUILDER
+                .comment("Enable hard clamp for custom mod entities from the list below (default: false)")
+                        .define("enable_mod_entity_clamp",false);
+
+        MOD_ENTITY_CLAMP_LIST=BUILDER
+                .comment("List of entity ids that should be clamped inside the border","Example: modid:entity_id")
+                .defineListAllowEmpty(List.of("mod_entity_clamp_list"),List.of(),object -> object instanceof String);
+
+        MOD_ENTITY_CLAMP_OFFSET=BUILDER
+                .comment("How many blocks inside the border clamped mod entities should be placed")
+                        .defineInRange("mod_entity_clamp_offset", 1.0,0.1,64.0);
+
         BUILDER.pop();
 
         BUILDER.push("Experimental Shape Border");
@@ -131,6 +156,11 @@ public class Config {
 
     @SubscribeEvent
     public static void onLoad(final ModConfigEvent event) {
+        BorderEvent.reloadConfig();
+    }
+
+    @SubscribeEvent
+    public static void onReload(final ModConfigEvent.Reloading event) {
         BorderEvent.reloadConfig();
     }
 }

@@ -6,6 +6,7 @@ import net.minecraft.resources.ResourceKey;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.util.Mth;
 import net.minecraft.world.effect.MobEffectInstance;
 import net.minecraft.world.effect.MobEffects;
 import net.minecraft.world.entity.Entity;
@@ -19,14 +20,15 @@ import net.minecraftforge.event.level.LevelEvent;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.common.Mod.EventBusSubscriber;
 import net.minecraftforge.fml.common.Mod.EventBusSubscriber.Bus;
+import net.minecraftforge.registries.ForgeRegistries;
 
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 @EventBusSubscriber(modid = "borderoverhaul", bus = Bus.FORGE)
 public class BorderEvent {
     private static final Map<ResourceKey<Level>, Integer> BORDER_CACHE=new HashMap<>();
+    private static final Set<ResourceLocation> MOD_ENTITY_KNOCKBACK_CACHE=new HashSet<>();
+    private static final Set<ResourceLocation> MOD_ENTITY_CLAMP_CACHE=new HashSet<>();
 
     @SubscribeEvent
     public static void onWorldLoad(LevelEvent.Load event) {
@@ -79,8 +81,33 @@ public class BorderEvent {
                     entity.setDeltaMovement(new Vec3(knockbackX, 0, knockbackZ));
                 } else if (entity instanceof net.minecraft.world.entity.Mob && Config.ENABLE_MOB_KNOCKBACK.get()) {
                     entity.setDeltaMovement(new Vec3(knockbackX, 0, knockbackZ));
+                } else if (Config.ENABLE_MOD_ENTITY_KNOCKBACK.get() && shouldKnockbackModEntity(entity)) {
+                    entity.setDeltaMovement(new Vec3(knockbackX, 0, knockbackZ));
+                } else if (Config.ENABLE_MOD_ENTITY_CLAMP.get() && shouldClampModEntity(entity)) {
+                    clampModEntity(entity,halfBorder);
                 }
         }
+    }
+
+    private static boolean shouldKnockbackModEntity(Entity entity) {
+        ResourceLocation resourceLocation= ForgeRegistries.ENTITY_TYPES.getKey(entity.getType());
+        return resourceLocation !=null && MOD_ENTITY_KNOCKBACK_CACHE.contains(resourceLocation);
+    }
+
+    private static boolean shouldClampModEntity(Entity entity) {
+        ResourceLocation resourceLocation=ForgeRegistries.ENTITY_TYPES.getKey(entity.getType());
+        return resourceLocation !=null && MOD_ENTITY_CLAMP_CACHE.contains(resourceLocation);
+    }
+
+    private static void clampModEntity(Entity entity, double halfBorder) {
+        double offset=Config.MOD_ENTITY_CLAMP_OFFSET.get();
+        double min= -halfBorder + offset;
+        double max= halfBorder - offset;
+        double clampedX= Mth.clamp(entity.getX(), min, max);
+        double clampedZ= Mth.clamp(entity.getZ(), min, max);
+        entity.setDeltaMovement(Vec3.ZERO);
+        entity.setPos(clampedX, entity.getY(), clampedZ);
+        entity.hurtMarked=true;
     }
 
 
@@ -103,6 +130,8 @@ public class BorderEvent {
 
     public static void reloadConfig() {
         BORDER_CACHE.clear();
+        MOD_ENTITY_KNOCKBACK_CACHE.clear();
+        MOD_ENTITY_CLAMP_CACHE.clear();
         BORDER_CACHE.put(Level.OVERWORLD,Config.OVERWORLD_BORDER.get());
         BORDER_CACHE.put(Level.NETHER,Config.NETHER_BORDER.get());
         BORDER_CACHE.put(Level.END,Config.END_BORDER.get());
@@ -118,6 +147,20 @@ public class BorderEvent {
                 BORDER_CACHE.put(dim,value);
             } catch (Exception ignored) {
 
+            }
+        }
+        List<? extends String> modEntityList=Config.MOD_ENTITY_KNOCKBACK_LIST.get();
+        for(String string : modEntityList) {
+            ResourceLocation resourceLocation=ResourceLocation.tryParse(string.trim());
+            if(resourceLocation !=null) {
+                MOD_ENTITY_KNOCKBACK_CACHE.add(resourceLocation);
+            }
+        }
+        List<? extends String> modEntityClampList=Config.MOD_ENTITY_CLAMP_LIST.get();
+        for(String string : modEntityClampList) {
+            ResourceLocation resourceLocation=ResourceLocation.tryParse(string.trim());
+            if(resourceLocation !=null) {
+                MOD_ENTITY_CLAMP_CACHE.add(resourceLocation);
             }
         }
     }
