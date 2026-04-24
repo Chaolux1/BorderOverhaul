@@ -1,5 +1,6 @@
 package net.chaolux.borderoverhaul;
 
+import net.chaolux.borderoverhaul.common.border.PlayerBorderMode;
 import net.chaolux.borderoverhaul.common.event.BorderEvent;
 import net.minecraftforge.common.ForgeConfigSpec;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
@@ -40,10 +41,38 @@ public class Config {
     public static final ForgeConfigSpec.DoubleValue MOD_ENTITY_CLAMP_OFFSET;
 
     // Effect radius
-    public static ForgeConfigSpec.IntValue EFFECT_1_THRESHOLD;
-    public static ForgeConfigSpec.IntValue EFFECT_2_THRESHOLD;
-    public static ForgeConfigSpec.IntValue EFFECT_3_THRESHOLD;
-    public static ForgeConfigSpec.IntValue EFFECT_4_THRESHOLD;
+    public static final ForgeConfigSpec.IntValue EFFECT_1_THRESHOLD;
+    public static final ForgeConfigSpec.IntValue EFFECT_2_THRESHOLD;
+    public static final ForgeConfigSpec.IntValue EFFECT_3_THRESHOLD;
+    public static final ForgeConfigSpec.IntValue EFFECT_4_THRESHOLD;
+
+    public static final ForgeConfigSpec.EnumValue<PlayerBorderMode> PLAYER_BORDER_MODE;
+
+    public static final ForgeConfigSpec.DoubleValue OPPOSITE_TELEPORT_OFFSET;
+    public static final ForgeConfigSpec.IntValue OPPOSITE_TELEPORT_SEARCH_RADIUS;
+    public static final ForgeConfigSpec.IntValue OPPOSITE_TELEPORT_COOLDOWN_TICKS;
+    public static final ForgeConfigSpec.IntValue DEATH_TIMER_SECONDS;
+    public static final ForgeConfigSpec.ConfigValue<String> SKY_PENALTY_DIMS;
+    public static final ForgeConfigSpec.DoubleValue SKY_PENALTY_X;
+    public static final ForgeConfigSpec.DoubleValue SKY_PENALTY_Y;
+    public static final ForgeConfigSpec.DoubleValue SKY_PENALTY_Z;
+    public static final ForgeConfigSpec.IntValue SKY_PENALTY_SLOW_FALLING_SECONDS;
+    public static final ForgeConfigSpec.IntValue SKY_PENALTY_COOLDOWN_TICKS;
+
+    public static final ForgeConfigSpec.IntValue VOID_MARK_SECONDS;
+    public static final ForgeConfigSpec.IntValue VOID_MARK_RECOVERY_SECONDS;
+    public static final ForgeConfigSpec.IntValue VOID_MARK_MAX_PUNISHMENTS;
+    public static final ForgeConfigSpec.BooleanValue PUNISHMENT_NO_SLEEP;
+    public static final ForgeConfigSpec.BooleanValue PUNISHMENT_NO_MENDING;
+    public static final ForgeConfigSpec.BooleanValue PUNISHMENT_NO_ELYTRA_FIREWORKS;
+    public static final ForgeConfigSpec.BooleanValue PUNISHMENT_NO_EATING_WHILE_MOVING;
+    public static final ForgeConfigSpec.BooleanValue PUNISHMENT_NO_SOUL_SPEED;
+    public static final ForgeConfigSpec.BooleanValue PUNISHMENT_AXE_BREAKS_SHIELD;
+    public static final ForgeConfigSpec.BooleanValue PUNISHMENT_NO_FISHING_TREASURE;
+    public static final ForgeConfigSpec.BooleanValue PUNISHMENT_NO_BEACON_BUFFS;
+    public static final ForgeConfigSpec.BooleanValue PUNISHMENT_NO_VILLAGER_DISCOUNTS;
+    public static final ForgeConfigSpec.BooleanValue PUNISHMENT_BOW_BLINDNESS;
+    public static final ForgeConfigSpec.DoubleValue PUNISHMENT_NO_EAT_MOVEMENT_THRESHOLD;
 
     static {
         BUILDER.push("Borders");
@@ -129,6 +158,8 @@ public class Config {
 
         OVAL_Z_RATIO=BUILDER.comment("Z-axis stretch ratio for oval shape(only applies if shape=OVAL)").defineInRange("oval_z_ratio",0.6,0.1,10.0);
 
+        PLAYER_BORDER_MODE=BUILDER.comment("Player border mode").defineEnum("player_border_mode",PlayerBorderMode.PUSHBACK_EFFECT);
+
         BUILDER.pop();
 
         BUILDER.push("Effect thresholds (in blocks beyond the border)");
@@ -150,6 +181,106 @@ public class Config {
                 .defineInRange("tier4", 100, 1, 10000);
 
         BUILDER.pop();
+
+        BUILDER.push("Opposite Side Teleport");
+
+        OPPOSITE_TELEPORT_OFFSET=BUILDER
+                .comment("How many blocks inside border the target point shold be")
+                .defineInRange("opposite_teleport_offset",2.0,0.1,64.0);
+
+        OPPOSITE_TELEPORT_SEARCH_RADIUS=BUILDER
+                .comment("Safe pos search radius around the target")
+                .defineInRange("opposite_teleport_search_radius",8,0,64);
+
+        OPPOSITE_TELEPORT_COOLDOWN_TICKS=BUILDER
+                .comment("Cooldown to prevent teleport spam")
+                .defineInRange("opposite_teleport_cooldown_ticks",20,0,200);
+
+        BUILDER.pop();
+
+        BUILDER.push("Death Timer");
+
+        DEATH_TIMER_SECONDS=BUILDER
+                .comment("Seconds until death in death timer mode")
+                .defineInRange("death_timer_seconds",30,1,3600);
+
+        BUILDER.pop();
+
+        BUILDER.push("Sky Penalty");
+
+        SKY_PENALTY_DIMS=BUILDER
+                .comment("Target dimension id for sky penalty")
+                .define("sky_penalty_dims","minecraft:overworld");
+
+        SKY_PENALTY_X=BUILDER
+                .defineInRange("sky_penalty_x",0.0,-30000000.0,30000000.0);
+
+        SKY_PENALTY_Y=BUILDER
+                .defineInRange("sky_penalty_y",330.0,-64.0,1024.0);
+
+        SKY_PENALTY_Z=BUILDER
+                .defineInRange("sky_penalty_z",0.0,-30000000.0,30000000.0);
+
+        SKY_PENALTY_SLOW_FALLING_SECONDS=BUILDER
+                .comment("Slow falling duration after sky penalty teleport")
+                .defineInRange("sky_penalty_slow_falling_seconds",60,1,3600);
+
+        SKY_PENALTY_COOLDOWN_TICKS=BUILDER
+                .comment("Cooldown for sky penalty mode")
+                .defineInRange("sky_penalty_cooldown_ticks",20,0,200);
+
+        BUILDER.pop();
+
+        BUILDER.push("Void Mark");
+
+        VOID_MARK_SECONDS=BUILDER
+                .comment("Void Mark countdown seconds while outside")
+                .defineInRange("void_mark_seconds",30,1,3600);
+
+        VOID_MARK_RECOVERY_SECONDS=BUILDER
+                .comment("Void Mark recovery target seconds while back inside")
+                .defineInRange("void_mark_recovery_seconds",30,1,3600);
+
+        VOID_MARK_MAX_PUNISHMENTS=BUILDER
+                .comment("Maximum number of punishments player can receive")
+                .defineInRange("void_mark_max_punishments",10,1,10);
+
+        PUNISHMENT_NO_SLEEP=BUILDER
+                .define("punishment_no_sleep",true);
+
+        PUNISHMENT_NO_MENDING=BUILDER
+                .define("punishment_no_mending",true);
+
+        PUNISHMENT_NO_ELYTRA_FIREWORKS=BUILDER
+                .define("punishment_no_elytra_fireworks",true);
+
+        PUNISHMENT_NO_EATING_WHILE_MOVING=BUILDER
+                .define("punishment_no_eating_while_moving",true);
+
+        PUNISHMENT_NO_SOUL_SPEED=BUILDER
+                .define("punishment_no_soul_speed",true);
+
+        PUNISHMENT_AXE_BREAKS_SHIELD=BUILDER
+                .define("punishment_axe_breaks_shield",true);
+
+        PUNISHMENT_NO_FISHING_TREASURE=BUILDER
+                .define("punishment_no_fishing_treasure",true);
+
+        PUNISHMENT_NO_BEACON_BUFFS=BUILDER
+                .define("punishment_no_beacon_buffs",true);
+
+        PUNISHMENT_NO_VILLAGER_DISCOUNTS=BUILDER
+                .define("punishment_no_villager_discounts",true);
+
+        PUNISHMENT_BOW_BLINDNESS=BUILDER
+                .define("punishment_bow_blindness",true);
+
+        PUNISHMENT_NO_EAT_MOVEMENT_THRESHOLD=BUILDER
+                .comment("Movement threshold for no-eating punishment")
+                .defineInRange("punishment_no_eat_movement_threshold",0.01,0.1,2.0);
+
+        BUILDER.pop();
+
     }
 
     public static final ForgeConfigSpec SPEC = BUILDER.build();

@@ -1,6 +1,7 @@
 package net.chaolux.borderoverhaul.common.event;
 
 import net.chaolux.borderoverhaul.Config;
+import net.chaolux.borderoverhaul.common.border.PlayerBorderMode;
 import net.minecraft.core.registries.Registries;
 import net.minecraft.resources.ResourceKey;
 import net.minecraft.resources.ResourceLocation;
@@ -66,9 +67,11 @@ public class BorderEvent {
                 double knockbackZ = -knockbackForce * (dz / math);
 
                 if (entity instanceof ServerPlayer player) {
-                    player.setDeltaMovement(new Vec3(knockbackX, 0.2, knockbackZ));
-                    player.hurtMarked = true;
-                    applyEffects(player, Math.max(Math.abs(x) - halfBorder, Math.abs(z) - halfBorder));
+                    if(Config.PLAYER_BORDER_MODE.get() == PlayerBorderMode.PUSHBACK_EFFECT) {
+                        player.setDeltaMovement(new Vec3(knockbackX, 0.2, knockbackZ));
+                        player.hurtMarked = true;
+                        applyEffects(player, Math.max(Math.abs(x) - halfBorder, Math.abs(z) - halfBorder));
+                    }
                 } else if (entity instanceof Boat boat && Config.ENABLE_BOAT_KNOCKBACK.get())  {
                     boat.setDeltaMovement(new Vec3(knockbackX, 0, knockbackZ));
                 } else if (entity instanceof AbstractMinecart cart && Config.ENABLE_MINECART_KNOCKBACK.get()) {
@@ -111,7 +114,7 @@ public class BorderEvent {
     }
 
 
-    private static void applyEffects(ServerPlayer player, double distance) {
+    public static void applyEffects(ServerPlayer player, double distance) {
         if (distance >= Config.EFFECT_1_THRESHOLD.get()) {
             player.addEffect(new MobEffectInstance(MobEffects.BLINDNESS, 100, 0, false, false, true));
             player.addEffect(new MobEffectInstance(MobEffects.DIG_SLOWDOWN, 100, 0, false, false, true));
