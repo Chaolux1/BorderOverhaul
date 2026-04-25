@@ -11,35 +11,50 @@ import net.minecraft.world.effect.MobEffectInstance;
 import net.minecraft.world.effect.MobEffects;
 import net.minecraft.world.entity.ExperienceOrb;
 import net.minecraft.world.entity.LivingEntity;
+import net.minecraft.world.entity.ai.attributes.AttributeInstance;
+import net.minecraft.world.entity.ai.attributes.AttributeModifier;
+import net.minecraft.world.entity.ai.attributes.Attributes;
 import net.minecraft.world.entity.item.ItemEntity;
 import net.minecraft.world.entity.npc.AbstractVillager;
 import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.inventory.MerchantMenu;
 import net.minecraft.world.item.*;
+import net.minecraft.world.item.enchantment.EnchantmentHelper;
+import net.minecraft.world.item.enchantment.Enchantments;
 import net.minecraft.world.item.trading.MerchantOffer;
 import net.minecraft.world.level.block.Blocks;
 import net.minecraftforge.event.TickEvent;
 import net.minecraftforge.event.entity.living.ShieldBlockEvent;
-import net.minecraftforge.event.entity.player.ItemFishedEvent;
-import net.minecraftforge.event.entity.player.PlayerInteractEvent;
-import net.minecraftforge.event.entity.player.PlayerSleepInBedEvent;
-import net.minecraftforge.event.entity.player.PlayerXpEvent;
+import net.minecraftforge.event.entity.player.*;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.common.Mod.EventBusSubscriber;
 import net.minecraftforge.fml.common.Mod.EventBusSubscriber.Bus;
 
-import java.util.Iterator;
-import java.util.Set;
+import java.util.*;
 
 @EventBusSubscriber(modid = "borderoverhaul", bus = Bus.FORGE)
 public class BorderPunishmentEvent {
     private static final Set<Item> TREASURE_FISHING_ITEMS=Set.of(Items.BOW,Items.ENCHANTED_BOOK,Items.FISHING_ROD,Items.NAME_TAG,Items.NAUTILUS_SHELL,Items.SADDLE);
-
     @SubscribeEvent
     public static void onPlayerTick(TickEvent.PlayerTickEvent event) {
         if(event.phase !=TickEvent.Phase.END) return;
         if(!(event.player instanceof ServerPlayer serverPlayer)) return;
-        if(isActive(serverPlayer, BorderPunishment.NO_SOUL_SPEED)) {
-            if(serverPlayer.level().getBlockState(serverPlayer.blockPosition().below()).is(Blocks.SOUL_SAND) || serverPlayer.level().getBlockState(serverPlayer.blockPosition().below()).is(Blocks.SOUL_SOIL)) serverPlayer.addEffect(new MobEffectInstance(MobEffects.MOVEMENT_SLOWDOWN,5,1,false,false,true));
+        if(isActive(serverPlayer,BorderPunishment.NO_SOUL_SPEED)) {
+            ItemStack itemStack=serverPlayer.getInventory().armor.get(0);
+            boolean isSoulSpeed=!itemStack.isEmpty() && EnchantmentHelper.getItemEnchantmentLevel(Enchantments.SOUL_SPEED,itemStack) > 0;
+            boolean isSoulBlock=serverPlayer.level().getBlockState(serverPlayer.blockPosition().below()).is(Blocks.SOUL_SAND) || serverPlayer.level().getBlockState(serverPlayer.blockPosition().below()).is(Blocks.SOUL_SOIL);
+            if(isSoulSpeed && isSoulBlock) {
+                AttributeInstance attributeInstance=serverPlayer.getAttribute(Attributes.MOVEMENT_SPEED);
+                if(attributeInstance !=null) {
+                    List<AttributeModifier> attributeModifiers=new ArrayList<>(attributeInstance.getModifiers());
+                    for(AttributeModifier attributeModifier : attributeModifiers) {
+                        String string=attributeModifier.getName().toLowerCase(Locale.ROOT);
+                        if(string.contains("soul")) {
+                            attributeInstance.removeModifier(attributeModifier.getId());
+                        }
+                    }
+                }
+            }
         }
         if(isActive(serverPlayer,BorderPunishment.NO_BEACON_BUFFS)) {
             removeEffect(serverPlayer,MobEffects.MOVEMENT_SPEED);
@@ -49,9 +64,8 @@ public class BorderPunishmentEvent {
             removeEffect(serverPlayer,MobEffects.REGENERATION);
             removeEffect(serverPlayer,MobEffects.DAMAGE_RESISTANCE);
         }
-
         if(isActive(serverPlayer,BorderPunishment.BOW_BLINDNESS)) {
-            if(serverPlayer.getMainHandItem().getItem() instanceof BowItem || serverPlayer.getOffhandItem().getItem() instanceof  BowItem) serverPlayer.addEffect(new MobEffectInstance(MobEffects.BLINDNESS,5,0,false,false,true));
+            if(serverPlayer.getMainHandItem().getItem() instanceof BowItem || serverPlayer.getOffhandItem().getItem() instanceof  BowItem) serverPlayer.addEffect(new MobEffectInstance(MobEffects.BLINDNESS,100,0,false,false,true));
         }
     }
 
@@ -117,11 +131,11 @@ public class BorderPunishmentEvent {
     }
 
     @SubscribeEvent
-    public static void noDiscount(PlayerInteractEvent.EntityInteract event) {
+    public static void noDiscount(PlayerContainerEvent.Open event) {
         if(!(event.getEntity() instanceof ServerPlayer serverPlayer)) return;
         if(!isActive(serverPlayer,BorderPunishment.NO_VILLAGER_DISCOUNTS)) return;
-        if(!(event.getTarget() instanceof AbstractVillager abstractVillager)) return;
-        for(MerchantOffer merchantOffer : abstractVillager.getOffers()) {
+        if(!(event.getContainer() instanceof MerchantMenu merchantMenu)) return;
+        for(MerchantOffer merchantOffer : merchantMenu.getOffers()) {
             merchantOffer.setSpecialPriceDiff(0);
         }
     }
