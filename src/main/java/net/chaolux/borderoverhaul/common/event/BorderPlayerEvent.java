@@ -4,6 +4,7 @@ import net.chaolux.borderoverhaul.Config;
 import net.chaolux.borderoverhaul.common.border.BorderPlayerData;
 import net.chaolux.borderoverhaul.common.border.BorderPunishment;
 import net.chaolux.borderoverhaul.common.border.BorderShapeHelper;
+import net.minecraft.ChatFormatting;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.registries.Registries;
 import net.minecraft.network.chat.Component;
@@ -88,7 +89,7 @@ public class BorderPlayerEvent {
             int ticks=BorderPlayerData.getDeathTimerTicks(serverPlayer) - 1;
             BorderPlayerData.setDeathTimerTicks(serverPlayer,ticks);
             int seconds=Math.max(0,ticks / 20);
-            serverPlayer.displayClientMessage(Component.literal("Border countdown: " + seconds + "s"),true);
+            serverPlayer.displayClientMessage(Component.translatable("message.borderoverhaul.border_countdown",seconds),true);
             if(withEffects) BorderEvent.applyEffects(serverPlayer,Math.max(distance,Config.EFFECT_1_THRESHOLD.get()));
             if(ticks <= 0) {
                 BorderPlayerData.clearDeathTimer(serverPlayer);
@@ -139,7 +140,7 @@ public class BorderPlayerEvent {
             BorderPlayerData.setVoidMarkRecovering(serverPlayer,false);
             ticks--;
             BorderPlayerData.setVoidMarkTicks(serverPlayer,ticks);
-            serverPlayer.displayClientMessage(Component.literal("Void Mark: " + Math.max(0, ticks / 20) + "s"),true);
+            serverPlayer.displayClientMessage(Component.translatable("message.borderoverhaul.void_mark").withStyle(ChatFormatting.DARK_PURPLE).append(Component.literal(String.valueOf(Math.max(0,ticks / 20))).withStyle(ChatFormatting.GOLD)).append(Component.translatable("message.borderoverhaul.void_mark_seconds").withStyle(ChatFormatting.GOLD)),true);
             if(ticks <= 0) {
                 RandomPunishment(serverPlayer);
                 BorderPlayerData.clearVoidMarkState(serverPlayer);
@@ -150,13 +151,13 @@ public class BorderPlayerEvent {
             BorderPlayerData.setVoidMarkRecovering(serverPlayer,true);
             ticks++;
             BorderPlayerData.setVoidMarkTicks(serverPlayer,ticks);
-            serverPlayer.displayClientMessage(Component.literal("Void Mark recovering: " + Math.min(ticks / 20,Config.VOID_MARK_RECOVERY_SECONDS.get()) + "s"),true);
+            serverPlayer.displayClientMessage(Component.translatable("message.borderoverhaul.void_mark_recovering").withStyle(ChatFormatting.GOLD).append(Component.literal(String.valueOf(Math.min(ticks / 20,Config.VOID_MARK_RECOVERY_SECONDS.get()))).withStyle(ChatFormatting.DARK_PURPLE)).append(Component.translatable("message.borderoverhaul.void_mark_seconds").withStyle(ChatFormatting.DARK_PURPLE)),true);
             if(ticks >= recovery) {
                 BorderPlayerData.setVoidMarkActive(serverPlayer,false);
                 BorderPlayerData.setVoidMarkRecovering(serverPlayer,false);
                 BorderPlayerData.setVoidMarkTicks(serverPlayer,0);
                 BorderPlayerData.setVoidMarkInstantNext(serverPlayer,true);
-                serverPlayer.displayClientMessage(Component.literal("Border remembers you."),false);
+                serverPlayer.displayClientMessage(Component.translatable("message.borderoverhaul.border_remembers"),false);
             }
         }
     }
@@ -173,7 +174,7 @@ public class BorderPlayerEvent {
         BorderPunishment borderPunishment=borderPunishmentList.get(serverPlayer.getRandom().nextInt(borderPunishmentList.size()));
         BorderPlayerData.setPunishments(serverPlayer,borderPunishment);
         BorderPlayerData.setVoidPunishmentCount(serverPlayer,current + 1);
-        serverPlayer.displayClientMessage(Component.literal("Void punishment gainded: " + borderPunishment.getString()),false);
+//        serverPlayer.displayClientMessage(Component.translatable("message.borderoverhaul.border_countdown",borderPunishment.getString()),false);
     }
 
     private static void killPlayer(ServerPlayer serverPlayer) {

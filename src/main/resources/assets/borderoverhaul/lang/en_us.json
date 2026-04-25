@@ -1,0 +1,10 @@
+{
+  "message.borderoverhaul.border_countdown": "Border countdown: %s s",
+  "message.borderoverhaul.void_mark": "Void Mark: ",
+  "message.borderoverhaul.void_mark_recovering": "Void Mark recovering: ",
+  "message.borderoverhaul.border_remembers": "You crossed the line. It remembers.",
+  "message.borderoverhaul.void_mark.no_eating": "Eat or run. Pick one.",
+  "message.borderoverhaul.void_mark.no_elytra_fireworks": "Nice try. The border clips your wings.",
+  "message.borderoverhaul.void_mark.no_sleep": "Sleep? The border is watching you.",
+  "message.borderoverhaul.void_mark_seconds": "s"
+}

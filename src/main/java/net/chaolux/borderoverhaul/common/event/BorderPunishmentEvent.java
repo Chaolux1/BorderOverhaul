@@ -74,7 +74,7 @@ public class BorderPunishmentEvent {
         if(!(event.getEntity() instanceof ServerPlayer serverPlayer)) return;
         if(!isActive(serverPlayer,BorderPunishment.NO_SLEEP)) return;
         event.setResult(Player.BedSleepingProblem.OTHER_PROBLEM);
-        serverPlayer.displayClientMessage(Component.literal("You can no longer sleep"),true);
+        serverPlayer.displayClientMessage(Component.translatable("message.borderoverhaul.void_mark.no_sleep"),true);
     }
 
     @SubscribeEvent
@@ -95,12 +95,12 @@ public class BorderPunishmentEvent {
         ItemStack itemStack=event.getItemStack();
         if(isActive(serverPlayer,BorderPunishment.NO_ELYTRA_FIREWORKS) && itemStack.getItem() instanceof FireworkRocketItem && serverPlayer.isFallFlying()) {
             event.setCanceled(true);
-            serverPlayer.displayClientMessage(Component.literal("Fireworks no longer help your elytra :)"),true);
+            serverPlayer.displayClientMessage(Component.translatable("message.borderoverhaul.void_mark.no_elytra_fireworks"),true);
             return;
         }
         if(isActive(serverPlayer,BorderPunishment.NO_EATING_WHILE_MOVING) && itemStack.isEdible() && serverPlayer.getDeltaMovement().horizontalDistanceSqr() > (Config.PUNISHMENT_NO_EAT_MOVEMENT_THRESHOLD.get() * Config.PUNISHMENT_NO_EAT_MOVEMENT_THRESHOLD.get())) {
             event.setCanceled(true);
-            serverPlayer.displayClientMessage(Component.literal("You must stand still to eat."),true);
+            serverPlayer.displayClientMessage(Component.translatable("message.borderoverhaul.void_mark.no_eating"),true);
         }
     }
 
