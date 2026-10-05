@@ -1,7 +1,5 @@
 # Border Overhaul
 
-# Border Overhaul
-
 Border Overhaul adds a new invisible world barrier with a lot more control over how it works. Each dimension can have its own border size, modded dimensions and entities are supported, and the border itself can use different shapes and behaviors.
 
 ## 💻 Development
